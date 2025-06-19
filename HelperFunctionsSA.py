@@ -25,28 +25,32 @@ def return_formatted_file() -> pd.DataFrame:
 
 #checks if tweet is about a movie and gives a similiartiy ranking
 #Should expand the range to have a confidence score. True False is too limiting!!!!
-def aboutMovie(post: str, keywords: list) -> int:
+def aboutMovie(post: str, keywords: list) -> float:
     movie_keywords = [
-    r"\b(saw|watched|watching|seeing|screening|re-watch(ed)?)\b",
-    r"\b(cinema|movie|film|theater|screen|showing|tickets?)\b",
-    r"\b(good|bad|amazing|terrible|boring|great|funny|awesome|awful|underrated|overrated)\b",
-    r"[🎥🍿👏]"
+        r"\b(saw|watched|watching|seeing|screening|re-watch(ed)?)\b",
+        r"\b(sequel(s)?|prequel|franchise|remake|reboot)\b",
+        r"\b(cinema|movie|film|theater|screen|showing|tickets?)\b",
+        r"\b(good|bad|amazing|terrible|boring|great|funny|awesome|awful|underrated|overrated)\b",
+        r"\b(actor|actress|director|scene|script|trailer|credits|runtime)\b",
+        r"letterboxd|imdb",
+        r"[🎥🍿👏]"
     ]
-    # text = text.lower()
-    # movie_words = ['movie', 'film', 'cinema', 'flick', 'show', 'watch', 'seen', 'actor', 'actress', 'director', 'scene', 'plot', 'story', 'character', 'trailer', 'screenplay', 'blockbuster', 'indie', 'documentary', 'animation', 'drama', 'comedy', 'horror', 'thriller', 'romance', 'sci-fi', 'fantasy']
-    # score = 0
-    # for word in movie_words:
-    #     if word in text:
-    #         score += 1
-    # return score
-    post_lower = post.lower()
-    title_match = any(word in post_lower for word in keywords)
-
-    # Check if any movie-related keyword matches
-    keyword_match = any(re.search(pattern, post_lower) for pattern in movie_keywords)
     
-    return title_match and keyword_match
+    post_lower = post.lower()
+    title_match = any(word.lower() in post_lower for word in keywords)
 
+    # Score from keyword patterns
+    keyword_hits = sum(bool(re.search(pattern, post_lower)) for pattern in movie_keywords)
+    total_patterns = len(movie_keywords)
+
+    # Raw score based on matches
+    score = keyword_hits / total_patterns  # Normalized between 0 and 1
+
+    # Boost score slightly if title match is found
+    if title_match:
+        score = min(score + 0.2, 1.0)
+
+    return round(score, 3)
 
 #32 (space)
 #48-57 (nums)
